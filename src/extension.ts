@@ -1,7 +1,6 @@
 // 'use-script'
 import * as vscode from 'vscode'
 import debug from '@/utils/debug'
-
 import RegisterCommands from '@/commands'
 import RegisterViews from '@/views'
 import luoguStatusBar from '@/views/luoguStatusBar'
@@ -13,7 +12,9 @@ import * as path from 'path'
 const luoguCsrfToken = 'CsrfToken.json'
 const luoguJSONName = 'luogu.json'
 const luoguUIDName = 'uid.json'
-const version = '4.5.2'
+const version = '4.5.4'
+export let resourcesPath = { value: '' }
+
 exports.luoguPath = path.join(os.homedir(), '.luogu')
 exports.luoguJSONPath = path.join(exports.luoguPath, luoguJSONName)
 exports.luoguCsrfTokenPath = path.join(exports.luoguPath, luoguCsrfToken)
@@ -29,7 +30,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   RegisterViews(context)
   console.log('init luogu-vscode success.')
   exports.rootPath = context.extensionPath
-  exports.resourcesPath = path.join(exports.rootPath, 'resources')
+  resourcesPath.value = path.join(exports.rootPath, 'resources')
   const versionPath = path.join(exports.luoguPath, 'version')
   if (!fs.existsSync(exports.luoguPath)) {
     try {
@@ -68,19 +69,24 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     <h2>
     <ul>
     <li>Added user communication group(QQ):1141066631</li>
-    <li>紧急提醒！由于你谷更新登录API，原“登录”功能暂不可用，请代以cookieslogin功能！</li>
     </ul>
     </h2>
     <h1>本次更新</h1>
     <h2>
     <ul>
-    <li>Fix:
+    <li>Add:
     <ol>
-    <li>cookieslogin相关问题</li>
+    <li>增加了对B开头题目的支持</li>
     </ol>
     </li>
     </ul>
     <ul>
+    <li>Fix:
+    <ol>
+    <li>修复了标题中空格显示异常的问题</li>
+    <li>修复了对UVA题目的显示</li>
+    </ol>
+    </li>
     </ul>
     </h2>
   </div>
@@ -91,7 +97,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       const panel = vscode.window.createWebviewPanel('更新说明', 'vscode-luogu v' + version + ' 更新说明', vscode.ViewColumn.Two, {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.file(exports.resourcesPath)]
+        localResourceRoots: [vscode.Uri.file(exports.resourcesPath.value)]
       })
       panel.webview.html = html
     }
@@ -99,7 +105,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     const panel = vscode.window.createWebviewPanel('更新说明', 'vscode-luogu' + version + ' 更新说明', vscode.ViewColumn.Two, {
       enableScripts: true,
       retainContextWhenHidden: true,
-      localResourceRoots: [vscode.Uri.file(exports.resourcesPath)]
+      localResourceRoots: [vscode.Uri.file(exports.resourcesPath.value)]
     })
     panel.webview.html = html
   }

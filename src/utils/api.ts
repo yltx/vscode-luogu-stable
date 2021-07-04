@@ -7,6 +7,7 @@ import * as os from 'os'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as vscode from 'vscode'
+const setCookie = require('set-cookie-parser');
 const luoguJSONName = 'luogu.json';
 exports.luoguPath = path.join(os.homedir(), '.luogu');
 exports.luoguJSONPath = path.join(exports.luoguPath, luoguJSONName);
@@ -24,12 +25,14 @@ export namespace API {
   export const CAPTCHA_IMAGE = `${apiURL}/verify/captcha`
   export const CONTEST = (cid: string) => `/contest/${cid}?_contentOnly=1`
   export const LOGIN_ENDPOINT = `${apiURL}/auth/userPassLogin`
+  export const SYNCLOGIN_ENDPOINT = `${apiURL}/auth/syncLogin`
   export const LOGIN_REFERER = `${baseURL}/auth/login`
-  export const LOGOUT = `${apiURL}/auth/logout`;
-  export const FATE = `/index/ajax_punch`;
-  export const BENBEN = (mode: string, page: number) => `/feed/${mode}?page=${page}`;
-  export const BENBEN_POST = `${apiURL}/feed/postBenben`;
-  export const BENBEN_DELETE = (id: string) => `${apiURL}/feed/delete/${id}`;
+  export const LOGOUT = `${apiURL}/auth/logout`
+  export const FATE = `/index/ajax_punch`
+  export const BENBEN = (mode: string, page: number) => `/feed/${mode}?page=${page}`
+  export const BENBEN_POST = `${apiURL}/feed/postBenben`
+  export const BENBEN_DELETE = (id: string) => `${apiURL}/feed/delete/${id}`
+  export const UNLOCK_ENDPOINT = `${apiURL}/auth/unlock`
   export const ranklist = (cid: string, page: number) => `/fe/api/contest/scoreboard/${cid}?page=${page}`
 }
 
@@ -61,7 +64,7 @@ export const axios = (() => {
   return axios
 })()
 
-export const setClientID = async (value: string) => new Promise((resolve, reject) => {
+export const setClientID = async (value: string) => new Promise<void>((resolve, reject) => {
   const cookie = new Cookie({
     key: '__client_id',
     value,
@@ -78,7 +81,7 @@ export const setClientID = async (value: string) => new Promise((resolve, reject
   })
 })
 
-export const setUID = async (value: string) => new Promise((resolve, reject) => {
+export const setUID = async (value: string) => new Promise<void>((resolve, reject) => {
   const cookie = new Cookie({
     key: '_uid',
     value,
@@ -244,25 +247,33 @@ export const searchSolution = async (pid: string) =>
  * @param {string} password 密码
  * @param {string} captcha 验证码
  */
-export const login = async (username: string, password: string, captcha: string) =>
-  axios.post(API.LOGIN_ENDPOINT, {
+ export const login = async (username, password, captcha) => {
+  const csrf = await csrfToken()
+
+  return axios.post(API.LOGIN_ENDPOINT, {
     username,
     password,
-    captcha
+    captcha,
   }, {
     headers: {
-      'X-CSRF-Token': await csrfToken(),
-      'Referer': API.LOGIN_REFERER
+      'Referer': API.LOGIN_REFERER,
+      'X-CSRF-Token': csrf
     }
-  }).then(res => res.data || null).catch(err => {
-    if (err.response) {
-      throw err.response.data;
-    } else if (err.request) {
-      throw Error('请求超时，请重试')
-    } else {
-      throw err;
+  }).then((resp) => resp.data)
+}
+
+export const unlock = async (code) => {
+  const csrf = await csrfToken()
+
+  return axios.post(API.UNLOCK_ENDPOINT, {
+    code,
+  }, {
+    headers: {
+      'Referer': API.LOGIN_REFERER,
+      'X-CSRF-Token': csrf
     }
-  })
+  }).then((resp) => resp.data)
+}
 
 export default axios
 
@@ -423,7 +434,7 @@ export const postVote = async (id: number, type: number) =>
     })
 
 export const parseProblemID = async (name: string) => {
-  const regexs = new Array(/(AT[0-9]{1,4})/i, /(CF[0-9]{1,4}[A-Z][0-9]{0,1})/i, /(SP[0-9]{1,5})/i, /(P[0-9]{4})/i, /(UVa[0-9]{1,5})/i, /(U[0-9]{1,6})/i, /(T[0-9]{1,6})/i);
+  const regexs = new Array(/(AT[0-9]{1,4})/i, /(CF[0-9]{1,4}[A-Z][0-9]{0,1})/i, /(SP[0-9]{1,5})/i, /(P[0-9]{4})/i, /(UVa[0-9]{1,5})/i, /(U[0-9]{1,6})/i, /(T[0-9]{1,6})/i, /(B[0-9]{1,6})/i);
   for (const regex of regexs) {
     const m = regex.exec(name);
     if (m !== null) {
@@ -495,7 +506,7 @@ export const prettyTime = (time: number) => {
 }
 
 export const getResourceFilePath = (relativePath: string) => {
-  const diskPath = vscode.Uri.file(path.join(exports.resourcesPath, relativePath));
+  const diskPath = vscode.Uri.file(path.join(exports.resourcesPath.value, relativePath));
   return diskPath.with({ scheme: 'vscode-resource' }).toString();
 }
 
