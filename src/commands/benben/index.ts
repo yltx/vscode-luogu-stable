@@ -28,7 +28,7 @@ export default new SuperCommand({
       }
     } catch (err) {
       console.error(err)
-      vscode.window.showErrorMessage(err.toString());
+      vscode.window.showErrorMessage(`${err}`);
       return;
     }
     const mode = await vscode.window.showQuickPick(['我发布的', '我关注的', '全网动态'], { ignoreFocusOut: true });
@@ -52,8 +52,10 @@ export default new SuperCommand({
       if (message.type === 'post') {
         // todo: add error handling in webview
         try {
+          console.log(message.data)
           pannel.webview.postMessage({ type: 'post-result', message: await postBenben(message.data) })
         } catch (err) {
+          console.log(err)
           pannel.webview.postMessage({ type: 'postError', message: err.message })
         }
       } else if (message.type === 'delete') {
@@ -145,7 +147,7 @@ export default new SuperCommand({
         class="am-comment-avatar"/></a></div><div class="am-comment-main"><header class="am-comment-hd"><div class="am-comment-meta"><span class="feed-username"><a class='${tmp[i][1]}' href="https://www.luogu.com.cn/user/${tmp[i][0]}"  target="_blank">${tmp[i][2]}</a>${tmp[i][3]}</span> ${tmp[i][4]}<a name="feed-reply" href="javascript: scrollToId('feed-content')" data-username="${tmp[i][2]}">回复</a></div></header><div class="am-comment-bd"><span class="feed-comment">${tmp[i][6]}</span></div></div></li>`);
         }
         pannel.webview.postMessage({ type: 'benbennew', message: message });
-        retryTimes = 0
+        retryTimes = maxRetryTimes + 2 //max+1说明重试次数超限引起错误（下面有if判断），max+2则说明正常结束
       } catch (err) {
         console.error(err)
         vscode.window.showErrorMessage(`获取犇犇失败，已重试 ${retryTimes} 次`);

@@ -16,12 +16,13 @@ export default new SuperCommand({
       }
     } catch (err) {
       console.error(err)
-      vscode.window.showErrorMessage(err.toString());
+      vscode.window.showErrorMessage(`${err}`);
       return;
     }
     const records = await fetchRecords();
     if (records?.currentData?.records?.result?.length) {
       const rid = records.currentData.records.result[0].id as number
+      console.log(rid)
       await showRecord(rid)
     }
   }

@@ -16,10 +16,14 @@ import lastRecord from './lastRecord'
 import cookielogin from './cookieslogin'
 import solution from './solution'
 import contest from './contest'
-const commands = [About, Login, Search, Submit, Logout, userInfo, Fate, selectLanguage, Save, Open, BenBen, lastRecord, cookielogin, solution, contest]
+import random from './random'
+import paintboard from './paintboard'
+import traininglist from './traininglist'
+import traindetails from './traindetails'
+const commands = [About, Login, Search, Submit, Logout, userInfo, Fate, selectLanguage, Save, Open, BenBen, lastRecord, cookielogin, solution, contest, random, paintboard, traininglist, traindetails]
 export { commands }
 
-export function registerCommands(context: vscode.ExtensionContext) {
+export function registerCommands (context: vscode.ExtensionContext) {
   for (const idx in commands) {
     const command = commands[idx]
     debug(`register command: ${command.onCommand}.`)

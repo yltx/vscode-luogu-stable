@@ -20,7 +20,7 @@ export namespace API {
   export const cookieDomain = 'luogu.com.cn'
   // export const SEARCH_PROBLEM = (pid: string) => `${apiURL}/problem/detail/${pid}`
   export const SEARCH_PROBLEM = (pid: string) => `/problem/${pid}?_contentOnly=1`
-  export const SEARCH_CONTESTPROBLEM = (pid: string,cid: string) => `/problem/${pid}?contestId=${cid}&_contentOnly=1`
+  export const SEARCH_CONTESTPROBLEM = (pid: string, cid: string) => `/problem/${pid}?contestId=${cid}&_contentOnly=1`
   export const SEARCH_SOLUTION = (pid: string, page: number) => `/problem/solution/${pid}?page=${page}&_contentOnly=1`
   export const CAPTCHA_IMAGE = `${apiURL}/verify/captcha`
   export const CONTEST = (cid: string) => `/contest/${cid}?_contentOnly=1`
@@ -34,6 +34,8 @@ export namespace API {
   export const BENBEN_DELETE = (id: string) => `${apiURL}/feed/delete/${id}`
   export const UNLOCK_ENDPOINT = `${apiURL}/auth/unlock`
   export const ranklist = (cid: string, page: number) => `/fe/api/contest/scoreboard/${cid}?page=${page}`
+  export const TRAINLISTDETAIL = (id: any) => `${baseURL}/training/${id}?_contentOnly=1`
+  export const SEARCHTRAINLIST = (channel: string,keyword: string,page: number) => `${baseURL}/training/list?type=${channel}&page=${page}&keyword=${encodeURI(keyword)}&_contentOnly=1`
 }
 
 export const jar = new CookieJar();
@@ -143,7 +145,6 @@ export const captcha = async () =>
         throw err;
       }
     })
-
 export const searchProblem = async (pid: string) =>
   axios.get(API.SEARCH_PROBLEM(pid)).then(res => res.data)
     .then(res => {
@@ -161,8 +162,8 @@ export const searchProblem = async (pid: string) =>
       }
     })
 
-export const searchContestProblem = async (pid: string,cid: string) =>
-  axios.get(API.SEARCH_CONTESTPROBLEM(pid,cid)).then(res => res.data)
+export const searchContestProblem = async (pid: string, cid: string) =>
+  axios.get(API.SEARCH_CONTESTPROBLEM(pid, cid)).then(res => res.data)
     .then(res => {
       if (res.code !== 200) {
         throw Error(res.currentData.errorMessage)
@@ -240,6 +241,38 @@ export const searchSolution = async (pid: string) =>
       }
     })
 
+export const searchTraininglist = async (type: string,keyword: string,page: number) =>
+    axios.get(API.SEARCHTRAINLIST(type,keyword,page))
+      .then(res => res?.data?.currentData).then(async res => {
+        // console.log(res)
+        if ((res || null) === null) { throw Error('题单不存在') }
+        return res
+      }).catch(err => {
+        if (err.response) {
+          throw err.response.data;
+        } else if (err.request) {
+          throw Error('请求超时，请重试')
+        } else {
+          throw err;
+        }
+      })
+
+export const searchTrainingdetail = async (id: any) =>
+    axios.get(API.TRAINLISTDETAIL(id))
+      .then(res => res?.data?.currentData).then(async res => {
+        // console.log(res)
+        if ((res || null) === null) { throw Error('题单不存在') }
+        return res
+      }).catch(err => {
+        if (err.response) {
+          throw err.response.data;
+        } else if (err.request) {
+          throw Error('请求超时，请重试')
+        } else {
+          throw err;
+        }
+      })
+
 /**
  * @api 登录
  * @async
@@ -247,13 +280,13 @@ export const searchSolution = async (pid: string) =>
  * @param {string} password 密码
  * @param {string} captcha 验证码
  */
- export const login = async (username, password, captcha) => {
+export const login = async (username, password, captcha) => {
   const csrf = await csrfToken()
 
   return axios.post(API.LOGIN_ENDPOINT, {
     username,
     password,
-    captcha,
+    captcha
   }, {
     headers: {
       'Referer': API.LOGIN_REFERER,
@@ -266,7 +299,7 @@ export const unlock = async (code) => {
   const csrf = await csrfToken()
 
   return axios.post(API.UNLOCK_ENDPOINT, {
-    code,
+    code
   }, {
     headers: {
       'Referer': API.LOGIN_REFERER,
@@ -384,6 +417,7 @@ export const fetchBenben = async (mode: string, page: number) =>
 export const postBenben = async (text: string) =>
   axios.post(API.BENBEN_POST, `content=${text}`, {
     headers: {
+      'content-type':'application/x-www-form-urlencoded',
       'X-CSRF-Token': await csrfToken(),
       'Referer': API.baseURL,
       'Origin': API.baseURL
@@ -434,7 +468,7 @@ export const postVote = async (id: number, type: number) =>
     })
 
 export const parseProblemID = async (name: string) => {
-  const regexs = new Array(/(AT[0-9]{1,4})/i, /(CF[0-9]{1,4}[A-Z][0-9]{0,1})/i, /(SP[0-9]{1,5})/i, /(P[0-9]{4})/i, /(UVa[0-9]{1,5})/i, /(U[0-9]{1,6})/i, /(T[0-9]{1,6})/i, /(B[0-9]{1,6})/i);
+  const regexs = new Array(/(AT_\w*?_\w{1,2})/i, /(CF[0-9]{1,4}[A-Z][0-9]{0,1})/i, /(SP[0-9]{1,5})/i, /(P[0-9]{4})/i, /(UVa[0-9]{1,5})/i, /(U[0-9]{1,6})/i, /(T[0-9]{1,6})/i, /(B[0-9]{4})/i);
   for (const regex of regexs) {
     const m = regex.exec(name);
     if (m !== null) {

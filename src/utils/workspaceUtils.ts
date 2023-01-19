@@ -1,24 +1,34 @@
 import * as vscode from 'vscode';
 
-import { languageList, Languages, ProblemState, stateColor, colorStyle, fileExtention } from '@/utils/shared';
+import { languageList, Languages, ProblemState, stateColor, colorStyle, fileExtention, difficulty, problemset } from '@/utils/shared';
 
-export function getSelectedLanguage(selected: string = vscode.workspace.getConfiguration('luogu').get<string>('defaultLanguage')!): number {
+export function getSelectedLanguage (selected: string = vscode.workspace.getConfiguration('luogu').get<string>('defaultLanguage')!): number {
   // @ts-ignore
   return Languages[selected as any];
 }
 
-export function getStatusText(status: number): string {
+export function getSelectedDifficulty (selected: string): number {
+  // @ts-ignore
+  return difficulty[selected as any];
+}
+
+export function getSelectedProblemset (selected: string): string {
+  // @ts-ignore
+  return problemset[selected as any];
+}
+
+export function getStatusText (status: number): string {
   return ProblemState[status];
 }
 
-export function getStatusColor(status: number): string {
+export function getStatusColor (status: number): string {
   return stateColor[status];
 }
-export function getLanauageFromExt(ext: string) {
+export function getLanauageFromExt (ext: string) {
   return fileExtention[ext] === undefined ? [] : languageList[fileExtention[ext]]
 }
 
-export function getScoreColor(score: number): string {
+export function getScoreColor (score: number): string {
   return score < 30 ? 'rgb(231, 76, 60)' : (score < 80 ? 'rgb(243, 156, 17)' : 'rgb(82, 196, 26)');
 }
 
@@ -26,7 +36,7 @@ export function getUsernameStyle (color: string): string {
   return colorStyle[color];
 }
 
-export function getUserSvg(ccfLevel: number): string {
+export function getUserSvg (ccfLevel: number): string {
   if (ccfLevel === 0) {
     return '';
   }
